@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { generateReportPDF } from '@/lib/pdf'
 import { SectionHeader } from './section-header'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -108,16 +109,25 @@ export function ReportsPanel() {
     queryFn: () => api.get<{ restaurantName: string; currency: string; phone: string | null; address: string | null }>('/api/settings'),
   })
 
+  const [downloading, setDownloading] = useState(false)
+
   const handlePrint = () => {
     if (!report) return
     window.print()
-    toast.success('Utilisez "Enregistrer en PDF" dans la boîte d\'impression')
   }
 
   const handleDownloadPDF = async () => {
     if (!report) return
-    // Trigger print dialog which allows "Save as PDF" on all platforms
-    window.print()
+    setDownloading(true)
+    try {
+      generateReportPDF(report, settings ?? undefined)
+      toast.success('Rapport PDF téléchargé avec succès')
+    } catch (e) {
+      toast.error('Erreur lors de la génération du PDF')
+      console.error(e)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   const periodLabel = PERIODS.find((p) => p.value === period)?.label ?? ''
@@ -130,8 +140,8 @@ export function ReportsPanel() {
         icon={<FileBarChart className="h-5 w-5" />}
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={!report} className="no-print">
-              <Download className="h-4 w-4 mr-1.5" /> PDF
+            <Button variant="outline" size="sm" onClick={handleDownloadPDF} disabled={!report || downloading} className="no-print">
+              <Download className="h-4 w-4 mr-1.5" /> {downloading ? 'Génération...' : 'Télécharger PDF'}
             </Button>
             <Button size="sm" onClick={handlePrint} disabled={!report} className="no-print">
               <Printer className="h-4 w-4 mr-1.5" /> Imprimer

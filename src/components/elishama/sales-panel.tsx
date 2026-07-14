@@ -3,7 +3,7 @@
 import { useState, Fragment } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { Sale, Product } from '@/lib/types'
+import { Sale, Product, Category } from '@/lib/types'
 import { SectionHeader } from './section-header'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,7 +23,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -82,8 +84,13 @@ export function SalesPanel() {
   })
 
   const { data: products = [] } = useQuery({
-    queryKey: ['products-finished'],
+    queryKey: ['products', 'all'],
     queryFn: () => api.get<Product[]>('/api/products'),
+  })
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => api.get<Category[]>('/api/categories'),
   })
 
   const createSale = useMutation({
@@ -315,7 +322,16 @@ export function SalesPanel() {
                       <Select value={item.productId} onValueChange={(v) => updateItem(index, 'productId', v)}>
                         <SelectTrigger className="text-sm"><SelectValue placeholder="Produit ou saisie libre" /></SelectTrigger>
                         <SelectContent className="max-h-60">
-                          {products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                          {categories.map((cat) => {
+                            const catProducts = products.filter((p) => p.categoryId === cat.id)
+                            if (catProducts.length === 0) return null
+                            return (
+                              <SelectGroup key={cat.id}>
+                                <SelectLabel className="text-xs text-muted-foreground font-semibold">{cat.name}</SelectLabel>
+                                {catProducts.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                              </SelectGroup>
+                            )
+                          })}
                         </SelectContent>
                       </Select>
                     </div>

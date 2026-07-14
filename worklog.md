@@ -98,3 +98,33 @@ Stage Summary:
 - French UI, FCFA currency, emerald/amber restaurant theme, light/dark mode
 - Responsive: desktop sidebar + mobile bottom nav
 - Database seeded with realistic Bénin restaurant data (8 categories, 18 products, 7 days of sales, expenses, losses)
+
+---
+Task ID: 5 (PDF download + sync fix)
+Agent: Main (Z.ai Code)
+Task: Fix PDF download (real file, not print dialog) + fix data synchronization across all panels
+
+Work Log:
+- Installed jsPDF + jspdf-autotable packages
+- Created PDF generation utility (src/lib/pdf.ts): professional A4 report with emerald header, KPI cards, daily breakdown table, expense breakdown + top products (2-column), recent transactions, footer with page numbers
+- Updated Reports panel: "Télécharger PDF" button now generates and downloads a real .pdf file (e.g. rapport_daily_2026-07-14.pdf), "Imprimer" button stays for printing
+- Fixed React Query key synchronization bug: Stock/Sales/Expenses panels used separate query keys (['products-all'], ['products-finished'], ['products-all-exp']) that didn't match the ['products'] invalidation key, so data didn't sync between panels
+- Standardized all product queries to use ['products', 'all'] so invalidating ['products'] refreshes ALL panels
+- Added category query ['categories'] to Stock, Sales, and Expenses panels (was only in Products panel)
+- Added category filter dropdown to Stock panel current stock table
+- Updated product dropdowns in Stock movement dialog, Sales item dialog, and Expenses loss dialog to group products by category using SelectGroup/SelectLabel
+- All mutations now properly invalidate ['products'] and ['categories'] across all panels
+
+Verification (Agent Browser):
+- PDF download: clicked "Télécharger PDF" → file saved as /home/z/Downloads/rapport_daily_2026-07-14.pdf (30KB, 1 page, valid PDF) ✓
+- Product sync: added "Produit Sync Test" in Products panel → immediately visible in Stock panel table AND stock movement dropdown ✓
+- Delete sync: deleted product in Products panel → immediately removed from Stock panel table AND dropdowns ✓
+- Category sync: added "Catégorie Sync Test" in Products panel → immediately appears in Stock panel category filter dropdown ✓
+- Products grouped by category in all dropdowns (Stock, Sales, Expenses) ✓
+- No browser errors ✓
+- Lint passes clean ✓
+
+Stage Summary:
+- PDF export now downloads a real PDF file with professional layout (header, KPIs, tables, footer)
+- Full data synchronization: any create/update/delete in one panel instantly reflects in all other panels
+- Categories are now consistently used across Products, Stock, Sales, and Expenses panels with grouping in dropdowns

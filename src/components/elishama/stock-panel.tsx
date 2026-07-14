@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
-import { Product, StockMovement, StockMovementType } from '@/lib/types'
+import { Product, StockMovement, StockMovementType, Category } from '@/lib/types'
 import { SectionHeader } from './section-header'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
@@ -61,6 +63,7 @@ export function StockPanel() {
   const [tab, setTab] = useState('current')
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [movementType, setMovementType] = useState<StockMovementType>('ENTREE')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [form, setForm] = useState({
@@ -82,8 +85,13 @@ export function StockPanel() {
   })
 
   const { data: products = [] } = useQuery({
-    queryKey: ['products-all'],
+    queryKey: ['products', 'all'],
     queryFn: () => api.get<Product[]>('/api/products'),
+  })
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => api.get<Category[]>('/api/categories'),
   })
 
   const createMovement = useMutation({
@@ -105,7 +113,8 @@ export function StockPanel() {
   const filteredStock = stock.filter((s) => {
     const matchSearch = s.name.toLowerCase().includes(search.toLowerCase())
     const matchStatus = statusFilter === 'all' || s.status === statusFilter
-    return matchSearch && matchStatus
+    const matchCategory = categoryFilter === 'all' || s.categoryId === categoryFilter
+    return matchSearch && matchStatus && matchCategory
   })
 
   const totalValue = stock.reduce((sum, s) => sum + s.stockValue, 0)
@@ -184,8 +193,19 @@ export function StockPanel() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="sm:w-48">
+                <SelectValue placeholder="Toutes catégories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes catégories</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="sm:w-44">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -311,11 +331,20 @@ export function StockPanel() {
               <Select value={form.productId} onValueChange={(v) => setForm({ ...form, productId: v })}>
                 <SelectTrigger><SelectValue placeholder="Choisir un produit" /></SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {products.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} (Stock: {p.stockQuantity} {p.unit})
-                    </SelectItem>
-                  ))}
+                  {categories.map((cat) => {
+                    const catProducts = products.filter((p) => p.categoryId === cat.id)
+                    if (catProducts.length === 0) return null
+                    return (
+                      <SelectGroup key={cat.id}>
+                        <SelectLabel className="text-xs text-muted-foreground font-semibold">{cat.name}</SelectLabel>
+                        {catProducts.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name} (Stock: {p.stockQuantity} {p.unit})
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    )
+                  })}
                 </SelectContent>
               </Select>
             </div>
