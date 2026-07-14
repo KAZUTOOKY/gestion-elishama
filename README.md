@@ -20,42 +20,53 @@ Application de gestion de stock et financière pour le restaurant ELISHAMA.
 
 ## Installation
 
-### Avec Bun (recommandé)
-
-```bash
-# 1. Installer les dépendances
-bun install
-
-# 2. Configurer la base de données
-cp .env.example .env
-bun run db:push
-
-# 3. (Optionnel) Charger les données de démonstration
-bun run prisma/seed.ts
-
-# 4. Démarrer l'application
-bun run dev
-```
-
 ### Avec npm
 
 ```bash
+# 1. Installer les dépendances
 npm install
+
+# 2. Copier le fichier d'exemple d'environnement
 cp .env.example .env
+
+# 3. Mettre à jour DATABASE_URL avec votre base PostgreSQL
+# 4. Synchroniser la base de données
 npx prisma db push
-npx prisma generate
+
+# 5. Démarrer l'application
 npm run dev
 ```
 
 L'application sera disponible sur `http://localhost:3000`
 
+### Avec Bun
+
+```bash
+bun install
+cp .env.example .env
+bun run db:push
+bun run dev
+```
+
 ## Variables d'environnement
 
-Créez un fichier `.env` à la racine :
+Créez un fichier `.env` à la racine à partir de [.env.example](.env.example) :
 
+```env
+DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+NEXT_PUBLIC_VERCEL_URL="http://localhost:3000"
+VERCEL_URL="http://localhost:3000"
 ```
-DATABASE_URL="file:./db/custom.db"
+
+## Déploiement GitHub / Vercel
+
+```bash
+git add .
+git commit -m "Prepare deployment"
+git push origin main
 ```
+
+Pour Vercel, connectez ce dépôt puis déployez avec la variable `DATABASE_URL` définie dans les paramètres d'environnement.
 
 ## Scripts disponibles
 
