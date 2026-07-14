@@ -163,3 +163,32 @@ Stage Summary:
 - Application is now fully downloadable as a ZIP file from the Settings panel
 - ZIP includes everything needed to run the app on another machine (code + README + .env template)
 - Download works in the sandboxed preview iframe (uses fetch + blob approach, not window.open)
+
+---
+Task ID: 7 (Settings panel bug fix)
+Agent: Main (Z.ai Code)
+Task: Fix problem in Settings panel - autoBackup toggle was being reverted by form save
+
+Work Log:
+- Investigated settings panel: all APIs working, page renders correctly
+- Found bug: SettingsFormCard included `autoBackup` in its form state, initialized once from initialSettings
+- When user toggled auto-backup switch (which calls API directly), the form state was NOT updated
+- When user then clicked "Enregistrer les paramètres", the form sent the STALE autoBackup value, reverting the toggle
+- Fix: Removed `autoBackup` from FormState interface and from the save payload
+  - The toggle switch is now handled exclusively by the separate toggleAutoBackup mutation
+  - The form only saves: restaurantName, currency, taxRate, phone, address
+- Added onError handler to toggleAutoBackup mutation for error feedback
+- Verified the PUT /api/settings route correctly handles partial updates (only updates provided fields)
+
+Verification (Agent Browser):
+- Initial state: autoBackup = true ✓
+- After toggle OFF: autoBackup = false ✓ (switch shows unchecked, API confirms false)
+- After clicking "Enregistrer les paramètres": autoBackup = false ✓ (STAYS false - bug fixed!)
+- Backup button: "Sauvegarde cloud créée avec succès" toast appears ✓
+- Download button: ZIP file downloaded successfully (144 KB) ✓
+- No browser errors ✓
+- Lint passes clean ✓
+
+Stage Summary:
+- Fixed: autoBackup toggle is no longer reverted when saving the settings form
+- All settings panel features verified working: form save, auto-backup toggle, cloud backup, application download

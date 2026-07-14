@@ -46,7 +46,6 @@ interface FormState {
   taxRate: number
   phone: string
   address: string
-  autoBackup: boolean
 }
 
 function SettingsFormCard({ initialSettings }: { initialSettings: Settings }) {
@@ -57,14 +56,16 @@ function SettingsFormCard({ initialSettings }: { initialSettings: Settings }) {
     taxRate: initialSettings.taxRate,
     phone: initialSettings.phone ?? '',
     address: initialSettings.address ?? '',
-    autoBackup: initialSettings.autoBackup,
   })
 
   const saveSettings = useMutation({
     mutationFn: (data: FormState) =>
       api.put('/api/settings', {
-        ...data,
+        restaurantName: data.restaurantName,
+        currency: data.currency,
         taxRate: Number(data.taxRate) || 0,
+        phone: data.phone,
+        address: data.address,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
@@ -144,6 +145,7 @@ export function SettingsPanel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
     },
+    onError: (e: Error) => toast.error(e.message),
   })
 
   if (isLoading || !settings) {
