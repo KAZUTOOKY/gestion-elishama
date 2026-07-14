@@ -2,6 +2,29 @@ import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatCurrency, formatDate, formatDateTime } from './format'
 
+export interface ReportData {
+  period: string
+  startDate: string
+  endDate: string
+  revenue: number
+  expenses: number
+  losses: number
+  profit: number
+  salesCount: number
+  avgSale: number
+  expenseBreakdown: { category: string; amount: number }[]
+  dailyBreakdown: { date: string; revenue: number; expenses: number }[]
+  topProducts: { name: string; quantity: number; revenue: number }[]
+  recentTransactions: { id: string; type: string; label: string; amount: number; date: string }[]
+}
+
+export interface ReportSettings {
+  restaurantName: string
+  currency: string
+  phone: string | null
+  address: string | null
+}
+
 interface ReportData {
   period: string
   startDate: string
