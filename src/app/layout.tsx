@@ -20,8 +20,11 @@ export const metadata: Metadata = {
   description: "Application de gestion de stock et financière pour le restaurant ELISHAMA",
   keywords: ["ELISHAMA", "restaurant", "gestion de stock", "finances", "Bénin"],
   authors: [{ name: "ELISHAMA" }],
+  manifest: '/manifest.webmanifest',
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: '/icon-192.png',
+    shortcut: '/icon-192.png',
+    apple: '/icon-192.png',
   },
 };
 
@@ -40,6 +43,17 @@ export default function RootLayout({
           <Toaster />
           <SonnerToaster richColors position="top-center" />
         </Providers>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js').catch(() => {});
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
