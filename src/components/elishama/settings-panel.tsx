@@ -33,6 +33,9 @@ import {
   Database,
   CheckCircle2,
   HardDriveDownload,
+  Download,
+  Package,
+  FileArchive,
 } from 'lucide-react'
 
 const CURRENCIES = ['FCFA', 'EUR', 'USD', 'NGN', 'GHS', 'XOF']
@@ -113,6 +116,7 @@ function SettingsFormCard({ initialSettings }: { initialSettings: Settings }) {
 
 export function SettingsPanel() {
   const queryClient = useQueryClient()
+  const [downloadingApp, setDownloadingApp] = useState(false)
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['settings'],
@@ -237,6 +241,64 @@ export function SettingsPanel() {
           </Card>
         </div>
       </div>
+
+      {/* Download application */}
+      <Card className="p-5 mt-4 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="brand-gradient rounded-xl p-3 shrink-0">
+              <Package className="h-6 w-6 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-base flex items-center gap-2">
+                Télécharger l'application
+                <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary">ZIP</Badge>
+              </h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Téléchargez le code source complet de l'application pour l'installer sur un autre ordinateur.
+              </p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><FileArchive className="h-3 w-3" /> Code source complet</span>
+                <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> README inclus</span>
+                <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Prêt à installer</span>
+              </div>
+            </div>
+          </div>
+          <Button
+            size="lg"
+            onClick={async () => {
+              setDownloadingApp(true)
+              try {
+                const res = await fetch('/api/download')
+                if (!res.ok) throw new Error('Erreur de téléchargement')
+                const blob = await res.blob()
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'elishama-stock-manager.zip'
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+                URL.revokeObjectURL(url)
+                toast.success('Application téléchargée avec succès')
+              } catch (e) {
+                toast.error('Erreur lors du téléchargement')
+                console.error(e)
+              } finally {
+                setDownloadingApp(false)
+              }
+            }}
+            disabled={downloadingApp}
+            className="shrink-0"
+          >
+            {downloadingApp ? (
+              <><RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Création du ZIP...</>
+            ) : (
+              <><Download className="h-4 w-4 mr-2" /> Télécharger l'application</>
+            )}
+          </Button>
+        </div>
+      </Card>
 
       {/* Backup history */}
       <Card className="p-5 mt-4">

@@ -128,3 +128,38 @@ Stage Summary:
 - PDF export now downloads a real PDF file with professional layout (header, KPIs, tables, footer)
 - Full data synchronization: any create/update/delete in one panel instantly reflects in all other panels
 - Categories are now consistently used across Products, Stock, Sales, and Expenses panels with grouping in dropdowns
+
+---
+Task ID: 6 (Application download feature)
+Agent: Main (Z.ai Code)
+Task: Add ability to download the entire application as a ZIP file
+
+Work Log:
+- Created README.md with full installation instructions (Bun + npm, env vars, scripts, project structure)
+- Created .env.example with DATABASE_URL template
+- Created /api/download route that packages the full project source into a ZIP file
+  - Includes: src/, prisma/, public/, all root config files, README, .env
+  - Excludes: node_modules, .next, .git, database files, logs, screenshots, worklog
+  - Uses rsync for file copying with exclusion patterns, zip command for compression
+  - Returns ZIP as downloadable attachment (Content-Disposition: attachment)
+- Added "Télécharger l'application" card in Settings panel with:
+  - Prominent gradient card with Package icon
+  - Large download button with loading state ("Création du ZIP...")
+  - Feature badges (Code source complet, README inclus, Prêt à installer)
+  - Blob-based download that works in sandboxed iframes
+- Fixed pdf.ts duplicate interface issue (consolidated to exported ReportData/ReportSettings)
+- Attempted archiver v8 but API changed (no default export, different streaming); switched to reliable rsync + zip system commands
+- Uninstalled archiver package (no longer needed)
+
+Verification (Agent Browser):
+- Navigate to Settings → "Télécharger l'application" card visible ✓
+- Click button → "Application téléchargée avec succès" toast ✓
+- File saved: /home/z/Downloads/elishama-stock-manager.zip (144 KB, valid ZIP) ✓
+- ZIP contains 141 files: all source, prisma schema/seed, public assets, config files, README, .env ✓
+- No browser console errors ✓
+- Lint passes clean ✓
+
+Stage Summary:
+- Application is now fully downloadable as a ZIP file from the Settings panel
+- ZIP includes everything needed to run the app on another machine (code + README + .env template)
+- Download works in the sandboxed preview iframe (uses fetch + blob approach, not window.open)

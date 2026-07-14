@@ -25,29 +25,6 @@ export interface ReportSettings {
   address: string | null
 }
 
-interface ReportData {
-  period: string
-  startDate: string
-  endDate: string
-  revenue: number
-  expenses: number
-  losses: number
-  profit: number
-  salesCount: number
-  avgSale: number
-  expenseBreakdown: { category: string; amount: number }[]
-  dailyBreakdown: { date: string; revenue: number; expenses: number }[]
-  topProducts: { name: string; quantity: number; revenue: number }[]
-  recentTransactions: { id: string; type: string; label: string; amount: number; date: string }[]
-}
-
-interface Settings {
-  restaurantName: string
-  currency: string
-  phone: string | null
-  address: string | null
-}
-
 const PERIOD_LABELS: Record<string, string> = {
   daily: 'Journalier',
   weekly: 'Hebdomadaire',
@@ -70,7 +47,7 @@ function getExpenseLabel(cat: string): string {
   return map[cat] ?? cat
 }
 
-export function generateReportPDF(report: ReportData, settings?: Settings): void {
+export function generateReportPDF(report: ReportData, settings?: ReportSettings): void {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
