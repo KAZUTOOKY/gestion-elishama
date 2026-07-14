@@ -1,0 +1,129 @@
+// ELISHAMA Stock Manager - Prisma Schema
+// Application de gestion de stock et financière pour restaurant
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  icon      String?
+  color     String?
+  createdAt DateTime  @default(now())
+  products  Product[]
+}
+
+model Product {
+  id            String          @id @default(cuid())
+  name          String
+  categoryId    String
+  category      Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  unit          String          @default("unité") // kg, L, g, unité, sac
+  costPrice     Float           @default(0) // prix d'achat unitaire
+  salePrice     Float           @default(0) // prix de vente unitaire
+  stockQuantity Float           @default(0) // quantité en stock
+  minThreshold  Float           @default(5) // seuil minimum pour alerte
+  expiryDate    DateTime?       // date de péremption
+  notes         String?
+  isIngredient  Boolean         @default(true) // ingrédient ou produit fini
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  stockMovements StockMovement[]
+  saleItems     SaleItem[]
+  losses        Loss[]
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      String   // ENTREE | SORTIE
+  quantity  Float
+  reason    String   // achat, vente, perte, casse, ajustement, retour
+  unitCost  Float    @default(0) // coût unitaire (pour les entrées)
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model Sale {
+  id           String     @id @default(cuid())
+  date         DateTime   @default(now())
+  totalAmount  Float
+  paymentMethod String    @default("espèces") // espèces, mobile money, carte
+  customerName String?
+  items        SaleItem[]
+  notes        String?
+  createdAt    DateTime   @default(now())
+}
+
+model SaleItem {
+  id        String   @id @default(cuid())
+  saleId    String
+  sale      Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  itemName  String   // libellé (libre ou nom du produit)
+  quantity  Float    @default(1)
+  unitPrice Float
+  total     Float
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  category    String   // achat_fournisseur, loyer, salaire, électricité, eau, transport, autre
+  description String
+  amount      Float
+  supplier    String?  // nom du fournisseur
+  createdAt   DateTime @default(now())
+}
+
+model Loss {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productName String
+  description String
+  quantity    Float    @default(0)
+  amount      Float    // valeur de la perte
+  type        String   // peremption, gaspillage, casse, vol
+  createdAt   DateTime @default(now())
+}
+
+model Settings {
+  id             String    @id @default(cuid())
+  restaurantName String    @default("ELISHAMA")
+  currency       String    @default("FCFA")
+  taxRate        Float     @default(0)
+  phone          String?
+  address        String?
+  autoBackup     Boolean   @default(true)
+  lastBackup     DateTime?
+  updatedAt      DateTime  @updatedAt
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  type      String    // low_stock, out_of_stock, expiry
+  message   String
+  productId String?
+  read      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+}
+
+model Backup {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  type      String   // auto, manual
+  size      String
+  status    String   // success, pending, failed
+  records   Int      @default(0)
+}
